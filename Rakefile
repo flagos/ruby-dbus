@@ -34,7 +34,7 @@ end
   end
 end
 
-load "ruby-dbus.gemspec"
+load "ruby-dbus-openplacos.gemspec"
 
 Rake::GemPackageTask.new(GEMSPEC) do |pkg|
   # no other formats needed
