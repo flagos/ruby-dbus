@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Test that a server survives various error cases
 require "test/unit"
-require "dbus"
+require "dbus-openplacos"
 
 class ServerRobustnessTest < Test::Unit::TestCase
   def setup

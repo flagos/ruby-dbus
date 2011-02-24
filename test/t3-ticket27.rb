@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Test passing a particular struct array through a variant
 # https://trac.luon.net/ruby-dbus/ticket/27
-require "dbus"
+require "dbus-openplacos"
 session_bus = DBus::ASessionBus.new
 svc = session_bus.service("org.ruby.service")
 obj = svc.object("/org/ruby/MyInstance")

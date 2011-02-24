@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Test marshalling variants according to ruby types
 require "test/unit"
-require "dbus"
+require "dbus-openplacos"
 
 class VariantTest < Test::Unit::TestCase
   def setup

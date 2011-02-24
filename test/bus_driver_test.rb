@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Test the methods of the bus driver
 require "test/unit"
-require "dbus"
+require "dbus-openplacos"
 
 def d(msg)
   puts msg if $DEBUG

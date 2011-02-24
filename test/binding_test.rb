@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Test the binding of dbus concepts to ruby concepts
 require "test/unit"
-require "dbus"
+require "dbus-openplacos"
 
 class BindingTest < Test::Unit::TestCase
   def setup

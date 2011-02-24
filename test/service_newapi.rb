@@ -4,7 +4,7 @@
 # find the library without external help
 $:.unshift File.expand_path("../../lib", __FILE__)
 
-require 'dbus'
+require 'dbus-openplacos'
 
 def d(msg)
   puts "#{$$} #{msg}" if $DEBUG

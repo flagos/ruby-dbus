@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require "test/unit"
-require "dbus"
+require "dbus-openplacos"
 
 def d(msg)
   puts msg if $DEBUG

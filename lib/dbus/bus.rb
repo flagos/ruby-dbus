@@ -189,7 +189,7 @@ module DBus
     attr_reader :unique_name
     # The socket that is used to connect with the bus.
     attr_reader :socket
-    attr_accessor :main_message_queue, :main_thread, :queue_used_by_thread, :thread_waiting_for_message, :rescuemethod
+    attr_accessor :main_message_queue, :main_thread, :queue_used_by_thread, :thread_waiting_for_message, :rescuemethod, :read_thread
 
     # Create a new connection to the bus for a given connect _path_. _path_
     # format is described in the D-Bus specification:
@@ -216,7 +216,7 @@ module DBus
     end
 
     def start_read_thread
-      @thread = Thread.new{
+      @read_thread = Thread.new{
         puts "start the reading thread on socket #{@socket}" if $DEBUG
         loop do #loop to read
           
@@ -867,6 +867,7 @@ module DBus
     # Create a new main event loop.
     def initialize
       @buses = Hash.new
+      @buses_thread = Array.new
       @quit_queue = Queue.new
       @quitting = false
       $mainclass = self
@@ -875,14 +876,14 @@ module DBus
     # the standar quit method didn't quit imediately and wait for a last
     # message. This methodes allow to quit imediately 
     def quit_imediately 
+      @buses.each_value do |b|
+        #b.read_thread.exit
+      end
       @buses_thread.each do |th|
         @buses_thread_id.delete(th.object_id)
-        th.exit
+        #th.exit
       end
       @quit_queue << "quit"      
-      @buses.each_value do |b|
-        b.thread.exit
-      end
 
     end
     
@@ -932,10 +933,10 @@ module DBus
         
         @quit_queue.pop
         
-        while not @buses_thread_id.empty?
-          id = @thread_as_quit.pop
-          @buses_thread_id.delete(id)
-        end
+        #~ while not @buses_thread_id.empty?
+          #~ id = @thread_as_quit.pop
+          #~ @buses_thread_id.delete(id)
+        #~ end
 
       else
         @buses.each_value do |b|

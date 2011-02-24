@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Test the signal handlers
 require "test/unit"
-require "dbus"
+require "dbus-openplacos"
 
 def d(msg)
   puts "#{$$} #{msg}" if $DEBUG
@@ -33,7 +33,7 @@ class SignalHandlerTest < Test::Unit::TestCase
     end
 
     d "will begin"
-    @obj.LongTaskBegin 3
+    @obj.LongTaskBegin 0.5
 
     quitter = Thread.new do
       d "sleep before quit"
