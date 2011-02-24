@@ -873,8 +873,12 @@ module DBus
 
     # Quit a running main loop, to be used eg. from a signal handler
     def quit
-      @quitting = true
-      @quit_queue << "quit"
+      if(ENV["DBUS_THREADED_ACCESS"] || false)
+        @quitting = true
+        quit_imediately
+      else
+        @quitting = true
+      end
     end
 
     # Run the main loop. This is a blocking call!
