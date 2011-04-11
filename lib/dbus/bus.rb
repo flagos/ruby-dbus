@@ -945,7 +945,14 @@ module DBus
           end
         end
         while not @quitting and not @buses.empty?
-          ready, dum, dum = IO.select(@buses.keys)
+          io_ready = false
+          while not io_ready and not @quitting and not @buses.empty? do
+            ready, dum, dum = IO.select(@buses.keys, nil, nil, 0.1)
+            io_ready = !(ready.nil? or ready.first.nil?)
+          end
+
+          next if ready.nil?
+
           ready.each do |socket|
             b = @buses[socket]
             begin
