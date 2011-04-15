@@ -12,6 +12,7 @@ require 'socket'
 require 'thread'
 require 'singleton'
 require 'fcntl'
+require 'timeout'
 
 # = D-Bus main module
 #
@@ -931,7 +932,13 @@ module DBus
           @buses_thread.push th
         end
         
-        @quit_queue.pop
+        begin
+            Timeout::timeout(1) {    
+                @quit_queue.pop
+            }
+        rescue Timeout::Error
+            retry
+        end
         
         #~ while not @buses_thread_id.empty?
           #~ id = @thread_as_quit.pop
