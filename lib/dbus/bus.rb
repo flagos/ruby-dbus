@@ -933,11 +933,11 @@ module DBus
         end
         
         begin
-            Timeout::timeout(1) {    
-                @quit_queue.pop
-            }
-        rescue Timeout::Error
-            retry
+ 
+          popping_thread =  Thread.new{
+            @quit_queue.pop
+          }
+          popping_thread.join # main thread - sleep for this thread waiting for poping thread
         end
         
         #~ while not @buses_thread_id.empty?
