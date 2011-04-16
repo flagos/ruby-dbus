@@ -931,21 +931,13 @@ module DBus
           @buses_thread_id.push th.object_id
           @buses_thread.push th
         end
+  
+        popping_thread =  Thread.new{
+          @quit_queue.pop
+        }
+        popping_thread.join # main thread - sleep for this thread waiting for poping thread
         
-        begin
- 
-          popping_thread =  Thread.new{
-            @quit_queue.pop
-          }
-          popping_thread.join # main thread - sleep for this thread waiting for poping thread
-        end
-        
-        #~ while not @buses_thread_id.empty?
-          #~ id = @thread_as_quit.pop
-          #~ @buses_thread_id.delete(id)
-        #~ end
-
-      else
+       else
         @buses.each_value do |b|
           while m = b.pop_message
             b.process(m)
