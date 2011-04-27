@@ -838,7 +838,7 @@ module DBus
 
     # Get the remote bus.
     def initialize socket_name
-      super(socket_name)
+      super(socket_name, ENV["DBUS_THREADED_ACCESS"] || false)
       connect
       send_hello
     end
