@@ -215,6 +215,7 @@ module DBus
       @main_thread = nil
       @threaded = threaded_access
       @popping_thread = nil # used in Main#run
+      @process_tread = nil
     end
 
     def start_read_thread
@@ -243,16 +244,25 @@ module DBus
               @queue_used_by_thread[thread_in_wait] << ret # puts the message in the queue
             end
           else
-            if main_thread
+            #send the message to the process thread
               @main_message_queue << ret             
-            else
-              process(ret) # there is no main.run thread, process the message
-            end
           end
         end
       }
     end
+    
+    def start_process_thread
+      @process_thread = Thread.new{
+          while m = pop_message
+            process(m)
+          end
 
+          while m = main_message_queue.pop
+            process(m)
+          end
+      }    
+    end
+    
     # Connect to the bus and initialize the connection.
     def connect
       addresses = @path.split ";"
@@ -277,6 +287,7 @@ module DBus
       end
       if (@threaded)
         start_read_thread
+        start_process_thread
       end
       worked
       # returns the address that worked or nil.
@@ -914,33 +925,11 @@ module DBus
       semaphore = Mutex.new
       
       if(ENV["DBUS_THREADED_ACCESS"] || false)
-        @buses.each_value do |b|
-          b.rescuemethod = self.method(:quit_imediately)
-          if (defined?(b.popping_thread).nil?) # in case of threaded Main#run
-            b.popping_thread= Thread.new{
-              b.main_thread = true
-              while m = b.pop_message
-                b.process(m)
-              end
-
-              while not b.nil? and not @quitting
-                m = b.main_message_queue.pop
-                b.process(m)
-              end
-
-              @thread_as_quit << Thread.current.object_id
-            }
-          end
-          @buses_thread_id.push b.popping_thread.object_id
-          @buses_thread.push b.popping_thread
-              
-        end 
-
-        if (defined?(popping_thread).nil?) # in case of threaded Main#run, only one popping thread
-          popping_thread =  Thread.new{
-            @quit_queue.pop
-          }
-        end
+      
+        # do nothing, just wait and see
+        popping_thread =  Thread.new{
+          @quit_queue.pop
+        }
         popping_thread.join # main thread go to sleep - waiting for poping thread
         
       else
