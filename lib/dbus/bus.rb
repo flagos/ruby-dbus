@@ -671,9 +671,10 @@ module DBus
       # don't ask for the same match if we override it
       unless @signal_matchrules.key?(mrs)
         puts "Asked for a new match" if $DEBUG
+        @signal_matchrules[mrs] = Array.new
         proxy.AddMatch(mrs)
       end
-      @signal_matchrules[mrs] = slot
+      @signal_matchrules[mrs] << slot
     end
 
     def remove_match(mr)
@@ -729,7 +730,9 @@ module DBus
         # the signal can match multiple different rules
         @signal_matchrules.each do |mrs, slot|
           if DBus::MatchRule.new.from_s(mrs).match(m)
-            slot.call(m)
+            slot.each { |s|
+              s.call(m)
+            }
           end
         end
       else
@@ -893,7 +896,7 @@ module DBus
         #b.read_thread.exit
       end
       @buses_thread.each do |th|
-        @buses_thread_id.delete(th.object_id)
+        #@buses_thread_id.delete(th.object_id)
         #th.exit
       end
       @quit_queue << "quit"      
@@ -931,7 +934,6 @@ module DBus
           @quit_queue.pop
         }
         popping_thread.join # main thread go to sleep - waiting for poping thread
-        
       else
         @buses.each_value do |b|
           while m = b.pop_message
