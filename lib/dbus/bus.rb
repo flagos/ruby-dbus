@@ -935,7 +935,7 @@ module DBus
         popping_thread =  Thread.new{
           @quit_queue.pop
         }
-        popping_thread.join # main thread - sleep for this thread waiting for poping thread
+        popping_thread.join # main thread go to sleep - waiting for poping thread
         
        else
         @buses.each_value do |b|
