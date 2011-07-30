@@ -190,7 +190,7 @@ module DBus
     attr_reader :unique_name
     # The socket that is used to connect with the bus.
     attr_reader :socket
-    attr_accessor :main_message_queue, :main_thread, :queue_used_by_thread, :thread_waiting_for_message, :rescuemethod, :read_thread, :popping_thread 
+    attr_accessor :main_message_queue, :main_thread, :queue_used_by_thread, :thread_waiting_for_message, :rescuemethod, :read_thread, :popping_thread, :process_thread
 
     # Create a new connection to the bus for a given connect _path_. _path_
     # format is described in the D-Bus specification:
@@ -215,7 +215,7 @@ module DBus
       @main_thread = nil
       @threaded = threaded_access
       @popping_thread = nil # used in Main#run
-      @process_tread = nil
+      @process_thread = nil
     end
 
     def start_read_thread
@@ -245,7 +245,7 @@ module DBus
             end
           else
             #send the message to the process thread
-              @main_message_queue << ret             
+            @main_message_queue << ret             
           end
         end
       }
@@ -253,6 +253,8 @@ module DBus
     
     def start_process_thread
       @process_thread = Thread.new{
+          # stop thread waiting a main.run
+         
           while m = pop_message
             process(m)
           end
@@ -287,7 +289,6 @@ module DBus
       end
       if (@threaded)
         start_read_thread
-        start_process_thread
       end
       worked
       # returns the address that worked or nil.
@@ -883,21 +884,20 @@ module DBus
     # Create a new main event loop.
     def initialize
       @buses = Hash.new
-      @buses_thread = Array.new
       @quit_queue = Queue.new
       @quitting = false
       $mainclass = self
+      @running = false
     end
 
+    def running?
+      return @running
+    end
     # the standar quit method didn't quit imediately and wait for a last
     # message. This methodes allow to quit imediately 
     def quit_imediately 
       @buses.each_value do |b|
-        #b.read_thread.exit
-      end
-      @buses_thread.each do |th|
-        #@buses_thread_id.delete(th.object_id)
-        #th.exit
+        b.process_thread.exit
       end
       @quit_queue << "quit"      
 
@@ -916,20 +916,22 @@ module DBus
       else
         @quitting = true
       end
+      @running = false
     end
 
     # Run the main loop. This is a blocking call!
     def run
       # before blocking, empty the buffers
       # https://bugzilla.novell.com/show_bug.cgi?id=537401
-      @buses_thread_id = Array.new
-      @buses_thread = Array.new
-      @thread_as_quit = Queue.new
-      semaphore = Mutex.new
-      
+      @running = true
+
       if(ENV["DBUS_THREADED_ACCESS"] || false)
-      
-        # do nothing, just wait and see
+        
+        # start buses processing threads
+        @buses.each_value { |b|
+          b.start_process_thread if b.process_thread.nil?
+        }
+        
         popping_thread =  Thread.new{
           @quit_queue.pop
         }
