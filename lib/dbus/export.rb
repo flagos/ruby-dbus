@@ -42,32 +42,34 @@ module DBus
 
     # Dispatch a message _msg_ to call exported methods
     def dispatch(msg)
-      case msg.message_type
-      when Message::METHOD_CALL
-        reply = nil
-        begin
-          if not self.intfs[msg.interface]
-            raise DBus.error("org.freedesktop.DBus.Error.UnknownMethod"),
-            "Interface \"#{msg.interface}\" of object \"#{msg.path}\" doesn't exist"
-          end
-          meth = self.intfs[msg.interface].methods[msg.member.to_sym]
-          if not meth
-            raise DBus.error("org.freedesktop.DBus.Error.UnknownMethod"),
-            "Method \"#{msg.member}\" on interface \"#{msg.interface}\" of object \"#{msg.path}\" doesn't exist"
-          end
-          methname = Object.make_method_name(msg.interface, msg.member)
-          retdata = method(methname).call(*msg.params)
-          retdata =  [*retdata]
+      Thread.new {
+        case msg.message_type
+        when Message::METHOD_CALL
+          reply = nil
+          begin
+            if not self.intfs[msg.interface]
+              raise DBus.error("org.freedesktop.DBus.Error.UnknownMethod"),
+              "Interface \"#{msg.interface}\" of object \"#{msg.path}\" doesn't exist"
+            end
+            meth = self.intfs[msg.interface].methods[msg.member.to_sym]
+            if not meth
+              raise DBus.error("org.freedesktop.DBus.Error.UnknownMethod"),
+              "Method \"#{msg.member}\" on interface \"#{msg.interface}\" of object \"#{msg.path}\" doesn't exist"
+            end
+            methname = Object.make_method_name(msg.interface, msg.member)
+            retdata = method(methname).call(*msg.params)
+            retdata =  [*retdata]
 
-          reply = Message.method_return(msg)
-          meth.rets.zip(retdata).each do |rsig, rdata|
-            reply.add_param(rsig.type, rdata)
+            reply = Message.method_return(msg)
+            meth.rets.zip(retdata).each do |rsig, rdata|
+              reply.add_param(rsig.type, rdata)
+            end
+          rescue => ex
+            reply = ErrorMessage.from_exception(ex).reply_to(msg)
           end
-        rescue => ex
-          reply = ErrorMessage.from_exception(ex).reply_to(msg)
+          @service.bus.send(reply.marshall)
         end
-        @service.bus.send(reply.marshall)
-      end
+      }
     end
 
     # Select (and create) the interface that the following defined methods
