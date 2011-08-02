@@ -242,11 +242,7 @@ module DBus
               @queue_used_by_thread[thread_in_wait] << ret # puts the message in the queue
             end
           else
-            if main_thread
-              @main_message_queue << ret             
-            else
-              process(ret) # there is no main.run thread, process the message
-            end
+            @main_message_queue << ret             
           end
         end
       }
