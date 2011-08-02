@@ -30,11 +30,20 @@ module DBus
     attr_reader :root
 
     # Create a new service with a given _name_ on a given _bus_.
-    def initialize(name, bus)
+    def initialize(name, bus,threaded = false)
       @name, @bus = name, bus
+      @threaded = threaded
       @root = Node.new("/")
     end
-
+    
+    def threaded?
+      return @threaded
+    end
+    
+    def threaded=(threaded)
+      @threaded = threaded
+    end
+    
     # Determine whether the service name already exists.
     def exists?
       bus.proxy.ListNames[0].member?(@name)
