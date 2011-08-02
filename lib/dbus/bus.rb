@@ -635,9 +635,7 @@ module DBus
       if (@threaded)
         @queue_used_by_thread.delete(Thread.current)
       else
-        until [DBus::Message::ERROR,
-               DBus::Message::METHOD_RETURN].include?(retm.message_type) and
-            retm.reply_serial == m.serial
+        while @method_call_replies.has_key? m.serial
           retm = wait_for_message
           process(retm)
         end
