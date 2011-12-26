@@ -42,6 +42,14 @@ module DBus
 
     # Dispatch a message _msg_ to call exported methods
     def dispatch(msg)
+      if @service.threaded?
+        Thread.new { process_dispatch(msg)}
+      else
+        process_dispatch(msg)
+      end
+    end
+
+    def process_dispatch(msg)
       case msg.message_type
       when Message::METHOD_CALL
         reply = nil
@@ -69,6 +77,7 @@ module DBus
         @service.bus.send(reply.marshall)
       end
     end
+
 
     # Select (and create) the interface that the following defined methods
     # belong to.

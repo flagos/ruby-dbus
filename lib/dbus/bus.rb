@@ -30,11 +30,20 @@ module DBus
     attr_reader :root
 
     # Create a new service with a given _name_ on a given _bus_.
-    def initialize(name, bus)
+    def initialize(name, bus,threaded = false)
       @name, @bus = name, bus
+      @threaded = threaded
       @root = Node.new("/")
     end
-
+    
+    def threaded?
+      return @threaded
+    end
+    
+    def threaded=(threaded)
+      @threaded = threaded
+    end
+    
     # Determine whether the service name already exists.
     def exists?
       bus.proxy.ListNames[0].member?(@name)
@@ -243,11 +252,7 @@ module DBus
               @queue_used_by_thread[thread_in_wait] << ret # puts the message in the queue
             end
           else
-            if main_thread
-              @main_message_queue << ret             
-            else
-              process(ret) # there is no main.run thread, process the message
-            end
+            @main_message_queue << ret             
           end
         end
       }
@@ -631,9 +636,7 @@ module DBus
       if (@threaded)
         @queue_used_by_thread.delete(Thread.current)
       else
-        until [DBus::Message::ERROR,
-               DBus::Message::METHOD_RETURN].include?(retm.message_type) and
-            retm.reply_serial == m.serial
+        while @method_call_replies.has_key? m.serial
           retm = wait_for_message
           process(retm)
         end

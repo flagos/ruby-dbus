@@ -8,6 +8,7 @@ GEMSPEC = Gem::Specification.new do |s|
   s.summary = "Fork from ruby-dbus"
   # s.description = FIXME
   s.version = File.read("VERSION").strip
+  s.license = "LGPL v2.1"
   s.author = "Openplacos Team"
   s.homepage = "https://github.com/flagos/ruby-dbus"
   s.files = FileList["{doc/tutorial,examples,lib,test}/**/*", "Rakefile", "ruby-dbus-openplacos.gemspec", "VERSION"].to_a.sort
