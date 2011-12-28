@@ -919,7 +919,7 @@ module DBus
       if(ENV["DBUS_THREADED_ACCESS"] || false)
         @buses.each_value do |b|
           b.rescuemethod = self.method(:quit_imediately)
-          if (defined?(b.popping_thread).nil?) # in case of threaded Main#run
+          if (b.popping_thread.nil?) # in case of threaded Main#run
             b.popping_thread= Thread.new{
               b.main_thread = true
               while m = b.pop_message
