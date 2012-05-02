@@ -19,8 +19,10 @@ module DBus
   class Object
     # The path of the object.
     attr_reader :path
-    # The interfaces that the object supports. Hash: String => Interface
-    class_attribute :intfs
+    # The interfaces that the object supports.
+    # intfs: Hash: String => Interface
+    # @@intfs_hash simulates a class attribute by being a hash Class => intfs
+    @@intfs_hash = {DBus::Object => nil}
     # The service that the object is exported by.
     attr_writer :service
 
@@ -32,6 +34,26 @@ module DBus
     def initialize(path)
       @path = path
       @service = nil
+    end
+
+    def self.intfs
+      if self.equal? DBus::Object
+        @@intfs_hash[DBus::Object]
+      else
+        @@intfs_hash[self] || self.superclass.intfs
+      end
+    end
+
+    def self.intfs= param
+      @@intfs_hash[self] = param
+    end
+
+    def intfs
+      self.class.intfs
+    end
+
+    def intfs= param
+      self.class.intfs = param
     end
 
     # State that the object implements the given _intf_.

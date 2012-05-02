@@ -942,9 +942,11 @@ module DBus
         
        else
         @buses.each_value do |b|
+
           while m = b.pop_message
             b.process(m)
           end
+          
         end
         while not @quitting and not @buses.empty?
           io_ready = false
