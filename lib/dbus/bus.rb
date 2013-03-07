@@ -249,6 +249,7 @@ module DBus
             else
               thread_in_wait = @thread_waiting_for_message[ret.reply_serial]
               @queue_used_by_thread[thread_in_wait] << ret # puts the message in the queue
+              @thread_waiting_for_message.delete(ret.reply_serial)
             end
           else
             @main_message_queue << ret             
